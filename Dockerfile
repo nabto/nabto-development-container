@@ -58,10 +58,10 @@ RUN cmake -GNinja -DBUILD_ONLY="lambda;sns" -DBUILD_SHARED_LIBS=OFF -DENABLE_UNI
 RUN ninja
 RUN ninja install
 
-ARG WOLFSSL_VERSION=4.7.0-stable
+ARG WOLFSSL_VERSION=master
 WORKDIR /build/wolfssl
-RUN wget https://github.com/wolfSSL/wolfssl/archive/refs/tags/v${WOLFSSL_VERSION}.tar.gz
-RUN tar xf v${WOLFSSL_VERSION}.tar.gz
+RUN wget https://github.com/wolfSSL/wolfssl/archive/refs/heads/master.zip
+RUN unzip master.zip
 WORKDIR /build/wolfssl/wolfssl-${WOLFSSL_VERSION}
 RUN ./autogen.sh
 # Fastest base intel config ./configure --enable-intelasm --enable-aesni --enable-fpecc --enable-fasthugemath --enable-sp-asm --enable-sp
