@@ -5,7 +5,7 @@ ARG CMAKE_VERSION=3.19.6
 ARG AWS_SDK_CPP_VERSION=1.8.155
 ARG ZLIB_VERSION=1.2.11
 
-RUN apt update && apt install -y git build-essential autoconf libtool pkg-config wget bash-completion vim gdb libgoogle-perftools-dev clang gcc curl ninja-build valgrind python3-pip
+RUN apt update && apt install -y git build-essential autoconf libtool pkg-config wget bash-completion vim gdb libgoogle-perftools-dev clang gcc curl ninja-build valgrind python3-pip sudo unzip
 
 #install cmake-format
 RUN pip3 install cmakelang
@@ -80,8 +80,6 @@ RUN ./configure --enable-aesni --enable-dtls  --enable-dtls-mtu --enable-sp --en
 RUN make -j 8
 RUN ./wolfcrypt/benchmark/benchmark -ecc
 RUN make install
-
-RUN apt-get install sudo unzip -y
 
 # Hiredis Install
 WORKDIR /tmp
