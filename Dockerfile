@@ -143,7 +143,7 @@ WORKDIR /tmp
 RUN wget https://github.com/redis/hiredis/archive/refs/heads/master.zip
 RUN unzip master.zip
 WORKDIR /tmp/hiredis-master/build
-RUN cmake -GNinja -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=Release ..
+RUN cmake -GNinja  -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=Release ..
 RUN ninja && ninja install
 
 
@@ -186,5 +186,7 @@ COPY --from=google_sdk /usr/local /usr/local
 COPY --from=wolfssl /usr/local /usr/local
 COPY --from=openssl /usr/local /usr/local
 COPY --from=curl /usr/local /usr/local
+COPY --from=hiredis /usr/local /usr/local
+RUN ldconfig
 
 WORKDIR /workspace
