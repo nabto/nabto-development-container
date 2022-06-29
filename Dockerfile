@@ -1,5 +1,3 @@
-ARG AWS_SDK_CPP_VERSION=1.8.155
-
 FROM debian:bullseye AS base
 ARG CMAKE_VERSION=3.19.6
 
