@@ -36,7 +36,7 @@ WORKDIR /build/curl
 RUN wget https://github.com/curl/curl/archive/curl-${CURL_VERSION}.tar.gz
 RUN tar xf curl-${CURL_VERSION}.tar.gz
 WORKDIR /build/curl/build
-RUN cmake -GNinja -DBUILD_SHARED_LIBS=0 ../curl-curl-${CURL_VERSION}
+RUN cmake -GNinja -DBUILD_SHARED_LIBS=0 -DCMAKE_POSITION_INDEPENDENT_CODE=ON ../curl-curl-${CURL_VERSION}
 RUN ninja
 RUN ninja install
 
@@ -46,7 +46,7 @@ WORKDIR /build/cares
 RUN wget https://github.com/c-ares/c-ares/archive/refs/tags/cares-${CARES_VERSION}.tar.gz
 RUN tar xf cares-${CARES_VERSION}.tar.gz
 WORKDIR /build/cares/build
-RUN cmake .. -GNinja -DBUILD_SHARED_LIBS=0 ../c-ares-cares-${CARES_VERSION}
+RUN cmake .. -GNinja -DBUILD_SHARED_LIBS=0 -DCMAKE_POSITION_INDEPENDENT_CODE=ON ../c-ares-cares-${CARES_VERSION}
 RUN ninja install
 
 FROM base as re2
@@ -56,7 +56,7 @@ RUN wget https://github.com/google/re2/archive/refs/tags/${RE2_VERSION}.tar.gz -
 RUN tar xf ${RE2_VERSION}.tar.gz
 RUN ls -la
 WORKDIR /build/build
-RUN cmake .. -GNinja -DBUILD_SHARED_LIBS=0 ../re2-${RE2_VERSION}
+RUN cmake .. -GNinja -DBUILD_SHARED_LIBS=0 -DCMAKE_POSITION_INDEPENDENT_CODE=ON ../re2-${RE2_VERSION}
 RUN ninja install
 
 FROM base as protobuf
@@ -65,7 +65,7 @@ WORKDIR /build/src
 ARG PROTOBUF_VERSION=21.2
 RUN curl -sSL https://github.com/protocolbuffers/protobuf/archive/v${PROTOBUF_VERSION}.tar.gz | tar -xzf - --strip-components=1
 WORKDIR /build/build
-RUN cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=yes -Dprotobuf_BUILD_TESTS=OFF ../src
+RUN cmake -GNinja -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=yes -Dprotobuf_BUILD_TESTS=OFF ../src
 RUN ls -la
 RUN ninja install
 RUN ldconfig
@@ -75,7 +75,7 @@ FROM base as abseil
 WORKDIR /build/abseil
 RUN curl -sSL https://github.com/abseil/abseil-cpp/archive/20211102.0.tar.gz | tar -xzf - --strip-components=1
 RUN sed -i 's/^#define ABSL_OPTION_USE_\(.*\) 2/#define ABSL_OPTION_USE_\1 0/' "absl/base/options.h"
-RUN cmake -DCMAKE_BUILD_TYPE=Release  -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=yes -DCMAKE_CXX_STANDARD=11 -H. -Bcmake-out
+RUN cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=Release  -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=yes -DCMAKE_CXX_STANDARD=11 -H. -Bcmake-out
 RUN cmake --build cmake-out -- -j ${NCPU:-4}
 RUN cmake --build cmake-out --target install -- -j ${NCPU:-4}
 RUN ldconfig
@@ -95,7 +95,7 @@ RUN ldconfig
 WORKDIR /build/src
 RUN curl -sSL https://github.com/grpc/grpc/archive/refs/tags/v${GRPC_VERSION}.tar.gz | tar -xzf - --strip-components=1
 WORKDIR /build/build
-RUN cmake -GNinja -DgRPC_ZLIB_PROVIDER=package -DgRPC_SSL_PROVIDER=package -DgRPC_RE2_PROVIDER=package -DgRPC_PROTOBUF_PROVIDER=package -DgRPC_ABSL_PROVIDER=package -DgRPC_CARES_PROVIDER=package  -DgRPC_INSTALL=ON -DgRPC_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo ../src
+RUN cmake -GNinja -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DgRPC_ZLIB_PROVIDER=package -DgRPC_SSL_PROVIDER=package -DgRPC_RE2_PROVIDER=package -DgRPC_PROTOBUF_PROVIDER=package -DgRPC_ABSL_PROVIDER=package -DgRPC_CARES_PROVIDER=package  -DgRPC_INSTALL=ON -DgRPC_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo ../src
 RUN ninja
 RUN ninja install
 
@@ -107,7 +107,7 @@ WORKDIR /build/aws-sdk
 RUN wget https://github.com/aws/aws-sdk-cpp/archive/${AWS_SDK_CPP_VERSION}.tar.gz
 RUN tar xf ${AWS_SDK_CPP_VERSION}.tar.gz
 WORKDIR /build/aws-sdk/build
-RUN cmake -GNinja -DBUILD_ONLY="lambda;sns" -DBUILD_SHARED_LIBS=OFF -DENABLE_UNITY_BUILD=ON -DENABLE_TESTING=0 ../aws-sdk-cpp-${AWS_SDK_CPP_VERSION}
+RUN cmake -GNinja -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_ONLY="lambda;sns" -DBUILD_SHARED_LIBS=OFF -DENABLE_UNITY_BUILD=ON -DENABLE_TESTING=0 ../aws-sdk-cpp-${AWS_SDK_CPP_VERSION}
 RUN ninja
 RUN ninja install
 
@@ -151,7 +151,7 @@ FROM base as crc32
 # Crc32c Install
 WORKDIR /build/crc32c
 RUN curl -sSL https://github.com/google/crc32c/archive/1.1.2.tar.gz | tar -xzf - --strip-components=1
-RUN cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=yes -DCRC32C_BUILD_TESTS=OFF -DCRC32C_BUILD_BENCHMARKS=OFF -DCRC32C_USE_GLOG=OFF -H. -Bcmake-out
+RUN cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_SHARED_LIBS=yes -DCRC32C_BUILD_TESTS=OFF -DCRC32C_BUILD_BENCHMARKS=OFF -DCRC32C_USE_GLOG=OFF -H. -Bcmake-out
 RUN cmake --build cmake-out -- -j ${NCPU:-4}
 RUN cmake --build cmake-out --target install -- -j ${NCPU:-4}
 RUN ldconfig
@@ -160,7 +160,7 @@ FROM base as nlohmann_json
 # Nlohmann JSON Install
 WORKDIR /build/nlohmann
 RUN curl -sSL https://github.com/nlohmann/json/archive/v3.10.5.tar.gz | tar -xzf - --strip-components=1
-RUN cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=yes -DBUILD_TESTING=OFF -DJSON_BuildTests=OFF -H. -Bcmake-out/nlohmann/json
+RUN cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_SHARED_LIBS=yes -DBUILD_TESTING=OFF -DJSON_BuildTests=OFF -H. -Bcmake-out/nlohmann/json
 RUN cmake --build cmake-out/nlohmann/json --target install -- -j ${NCPU:-4}
 RUN ldconfig
 
@@ -176,7 +176,7 @@ ARG GCCPP_VERSION="v1.35.0"
 WORKDIR /build/src
 RUN curl -sSL https://github.com/googleapis/google-cloud-cpp/archive/${GCCPP_VERSION}.tar.gz | tar -xzf - --strip-components=1
 WORKDIR /build/build
-RUN cmake -GNinja -DBUILD_TESTING=OFF -DGOOGLE_CLOUD_CPP_ENABLE_EXAMPLES=OFF -DGOOGLE_CLOUD_CPP_ENABLE=pubsub ../src
+RUN cmake -GNinja -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_TESTING=OFF -DGOOGLE_CLOUD_CPP_ENABLE_EXAMPLES=OFF -DGOOGLE_CLOUD_CPP_ENABLE=pubsub ../src
 RUN ninja install
 
 FROM base as devcontainer
