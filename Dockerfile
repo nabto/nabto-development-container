@@ -109,11 +109,8 @@ RUN ninja
 RUN ninja install
 
 FROM base as wolfssl
-ARG WOLFSSL_VERSION=master
 WORKDIR /build/wolfssl
-RUN wget https://github.com/wolfSSL/wolfssl/archive/refs/heads/master.zip
-RUN unzip master.zip
-WORKDIR /build/wolfssl/wolfssl-${WOLFSSL_VERSION}
+RUN curl -sSL https://github.com/wolfSSL/wolfssl/archive/refs/tags/v5.4.0-stable.tar.gz | tar -xzf - --strip-components=1
 RUN ./autogen.sh
 # Fastest base intel config ./configure --enable-intelasm --enable-aesni --enable-fpecc --enable-fasthugemath --enable-sp-asm --enable-sp
 # Test config modifications with ./wolfcrypt/benchmark/benchmark -ecc
@@ -127,7 +124,7 @@ RUN ./autogen.sh
 #ECDSA [      SECP256R1]   256 verify      46500 ops took 1.001 sec, avg 0.022 ms, 46475.512 ops/sec
 #Benchmark complete
 # in 4.7.0-stable there is a bug regarding --enable-fpecc in the benchmark on virtual machines so it has been disabled.
-RUN ./configure --enable-aesni --enable-dtls  --enable-dtls-mtu --enable-sp --enable-sp-asm --enable-sp-math-all --enable-aesccm  --enable-intelasm --enable-aesni --enable-maxfragment --enable-fasthugemath --enable-harden --enable-static --disable-shared --enable-alpn  --enable-opensslcoexist --enable-sep --with-pic --enable-certgen --enable-keygen --enable-sni CFLAGS="-DKEEP_PEER_CERT"
+RUN ./configure --enable-aesni --enable-dtls  --enable-dtls-mtu --enable-sp --enable-sp-asm --enable-sp-math-all --enable-aesccm  --enable-intelasm --enable-aesni --enable-maxfragment --enable-fasthugemath --enable-harden --enable-static --disable-shared --enable-alpn  --enable-opensslcoexist --enable-sep --with-pic --enable-certgen --enable-keygen --enable-sni CFLAGS="-DKEEP_PEER_CERT  -DWOLFSSL_PUBLIC_MP -DWOLFSSL_PUBLIC_ECC_ADD_DBL"
 RUN make -j 8
 RUN ./wolfcrypt/benchmark/benchmark -ecc
 RUN make install
