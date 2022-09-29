@@ -110,7 +110,7 @@ RUN ninja install
 
 FROM base as wolfssl
 WORKDIR /build/wolfssl
-RUN curl -sSL https://github.com/wolfSSL/wolfssl/archive/refs/tags/v5.4.0-stable.tar.gz | tar -xzf - --strip-components=1
+RUN curl -sSL https://github.com/wolfSSL/wolfssl/archive/refs/tags/v5.5.1-stable.tar.gz | tar -xzf - --strip-components=1
 RUN ./autogen.sh
 # Fastest base intel config ./configure --enable-intelasm --enable-aesni --enable-fpecc --enable-fasthugemath --enable-sp-asm --enable-sp
 # Test config modifications with ./wolfcrypt/benchmark/benchmark -ecc
