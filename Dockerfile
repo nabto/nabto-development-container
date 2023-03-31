@@ -19,7 +19,7 @@ RUN ninja
 RUN ninja install
 
 FROM base as openssl
-ARG OPENSSL_VERSION=1.1.1k
+ARG OPENSSL_VERSION=3.1.0
 
 WORKDIR /build/openssl
 RUN wget https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz
