@@ -90,7 +90,8 @@ COPY --from=abseil /usr/local /usr/local
 RUN ldconfig
 
 WORKDIR /build/src
-RUN curl -sSL https://github.com/grpc/grpc/archive/refs/tags/v${GRPC_VERSION}.tar.gz | tar -xzf - --strip-components=1
+#RUN curl -sSL https://github.com/grpc/grpc/archive/refs/tags/v${GRPC_VERSION}.tar.gz | tar -xzf - --strip-components=1
+RUN curl -sSL https://github.com/jrandolf/grpc/archive/refs/heads/openssl-3.tar.gz | tar -xzf - --strip-components=1
 WORKDIR /build/build
 RUN cmake -GNinja -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DgRPC_ZLIB_PROVIDER=package -DgRPC_SSL_PROVIDER=package -DgRPC_RE2_PROVIDER=package -DgRPC_PROTOBUF_PROVIDER=package -DgRPC_ABSL_PROVIDER=package -DgRPC_CARES_PROVIDER=package  -DgRPC_INSTALL=ON -DgRPC_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo ../src
 RUN ninja
