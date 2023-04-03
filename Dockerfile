@@ -25,9 +25,10 @@ WORKDIR /build/openssl
 RUN wget https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz
 RUN tar xf openssl-${OPENSSL_VERSION}.tar.gz
 WORKDIR /build/openssl/build
-RUN ../openssl-${OPENSSL_VERSION}/config
+RUN ../openssl-${OPENSSL_VERSION}/config shared zlib
 RUN make -j 8
 RUN make install_sw
+RUN cp -r /usr/local/lib64/* /usr/local/lib/
 
 FROM base as curl
 COPY --from=openssl /usr/local /usr/local
@@ -70,9 +71,9 @@ RUN ldconfig
 FROM base as abseil
 # Abseil Install
 WORKDIR /build/abseil
-RUN curl -sSL https://github.com/abseil/abseil-cpp/archive/20211102.0.tar.gz | tar -xzf - --strip-components=1
+RUN curl -sSL https://github.com/abseil/abseil-cpp/archive/20230125.2.tar.gz | tar -xzf - --strip-components=1
 RUN sed -i 's/^#define ABSL_OPTION_USE_\(.*\) 2/#define ABSL_OPTION_USE_\1 0/' "absl/base/options.h"
-RUN cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=Release  -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=OFF -DCMAKE_CXX_STANDARD=11 -H. -Bcmake-out
+RUN cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=Release  -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=OFF -DCMAKE_CXX_STANDARD=14 -H. -Bcmake-out
 RUN cmake --build cmake-out -- -j ${NCPU:-4}
 RUN cmake --build cmake-out --target install -- -j ${NCPU:-4}
 RUN ldconfig
