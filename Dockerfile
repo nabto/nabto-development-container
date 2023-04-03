@@ -99,14 +99,16 @@ RUN ninja
 RUN ninja install
 
 FROM base as aws_sdk
-ARG AWS_SDK_CPP_VERSION=1.8.155
+ARG AWS_SDK_CPP_VERSION=1.11.50
 COPY --from=curl /usr/local /usr/local
 
 WORKDIR /build/aws-sdk
-RUN wget https://github.com/aws/aws-sdk-cpp/archive/${AWS_SDK_CPP_VERSION}.tar.gz
-RUN tar xf ${AWS_SDK_CPP_VERSION}.tar.gz
+RUN git clone --recurse-submodules --depth 1 --branch ${AWS_SDK_CPP_VERSION} https://github.com/aws/aws-sdk-cpp
+# RUN wget https://github.com/aws/aws-sdk-cpp/archive/${AWS_SDK_CPP_VERSION}.tar.gz
+# RUN tar xf ${AWS_SDK_CPP_VERSION}.tar.gz
+# RUN ./aws-sdk-cpp-${AWS_SDK_CPP_VERSION}/prefetch_crt_dependency.sh
 WORKDIR /build/aws-sdk/build
-RUN cmake -GNinja -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_ONLY="lambda;sns" -DBUILD_SHARED_LIBS=OFF -DENABLE_UNITY_BUILD=ON -DENABLE_TESTING=0 ../aws-sdk-cpp-${AWS_SDK_CPP_VERSION}
+RUN cmake -GNinja -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_ONLY="lambda;sns" -DBUILD_SHARED_LIBS=OFF -DENABLE_UNITY_BUILD=ON -DENABLE_TESTING=0 ../aws-sdk-cpp
 RUN ninja
 RUN ninja install
 
@@ -172,7 +174,7 @@ ARG GCCPP_VERSION="v1.35.0"
 WORKDIR /build/src
 RUN curl -sSL https://github.com/googleapis/google-cloud-cpp/archive/${GCCPP_VERSION}.tar.gz | tar -xzf - --strip-components=1
 WORKDIR /build/build
-RUN cmake -GNinja -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_SHARED_LIBS=0 -DBUILD_TESTING=OFF -DGOOGLE_CLOUD_CPP_ENABLE_EXAMPLES=OFF -DGOOGLE_CLOUD_CPP_ENABLE=pubsub ../src
+RUN cmake -GNinja -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_SHARED_LIBS=0 -DCMAKE_CXX_STANDARD=14 -DBUILD_TESTING=OFF -DGOOGLE_CLOUD_CPP_ENABLE_EXAMPLES=OFF -DGOOGLE_CLOUD_CPP_ENABLE=pubsub ../src
 RUN ninja install
 
 FROM base as devcontainer
