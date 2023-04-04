@@ -25,21 +25,27 @@ WORKDIR /build/openssl
 RUN wget https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz
 RUN tar xf openssl-${OPENSSL_VERSION}.tar.gz
 WORKDIR /build/openssl/build
-RUN ../openssl-${OPENSSL_VERSION}/config shared zlib
+RUN ../openssl-${OPENSSL_VERSION}/config
 RUN make -j 8
 RUN make install_sw
 RUN cp -r /usr/local/lib64/* /usr/local/lib/
+RUN rm -rf /usr/local/lib64
 
 FROM base as curl
 COPY --from=openssl /usr/local /usr/local
-ARG CURL_VERSION=7_75_0
+ARG CURL_VERSION=8.0.1
 WORKDIR /build/curl
-RUN wget https://github.com/curl/curl/archive/curl-${CURL_VERSION}.tar.gz
+RUN wget https://github.com/curl/curl/releases/download/curl-8_0_1/curl-8.0.1.tar.gz
+#RUN wget https://github.com/curl/curl/archive/curl-${CURL_VERSION}.tar.gz
 RUN tar xf curl-${CURL_VERSION}.tar.gz
-WORKDIR /build/curl/build
-RUN cmake -GNinja -DBUILD_SHARED_LIBS=0 -DCMAKE_POSITION_INDEPENDENT_CODE=ON ../curl-curl-${CURL_VERSION}
-RUN ninja
-RUN ninja install
+WORKDIR /build/curl/curl-${CURL_VERSION}
+RUN ./configure --with-openssl --disable-shared
+RUN make -j 8
+RUN make install
+# WORKDIR /build/curl/build
+# RUN cmake -GNinja -DBUILD_SHARED_LIBS=0 -DCMAKE_POSITION_INDEPENDENT_CODE=ON ../curl-curl-${CURL_VERSION}
+# RUN ninja
+# RUN ninja install
 
 FROM base as cares
 ARG CARES_VERSION=1_18_1
@@ -108,7 +114,7 @@ RUN git clone --recurse-submodules --depth 1 --branch ${AWS_SDK_CPP_VERSION} htt
 # RUN tar xf ${AWS_SDK_CPP_VERSION}.tar.gz
 # RUN ./aws-sdk-cpp-${AWS_SDK_CPP_VERSION}/prefetch_crt_dependency.sh
 WORKDIR /build/aws-sdk/build
-RUN cmake -GNinja -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_ONLY="lambda;sns" -DBUILD_SHARED_LIBS=OFF -DENABLE_UNITY_BUILD=ON -DENABLE_TESTING=0 ../aws-sdk-cpp
+RUN cmake -GNinja -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_ONLY="lambda;sns" -DBUILD_SHARED_LIBS=ON -DENABLE_UNITY_BUILD=ON -DENABLE_TESTING=0 -DUSE_OPENSSL=ON ../aws-sdk-cpp
 RUN ninja
 RUN ninja install
 
@@ -185,6 +191,7 @@ COPY --from=wolfssl /usr/local /usr/local
 COPY --from=openssl /usr/local /usr/local
 COPY --from=curl /usr/local /usr/local
 COPY --from=hiredis /usr/local /usr/local
+RUN ln -sf /usr/local/lib/libssl.so /usr/lib/x86_64-linux-gnu/libssl.so
 RUN ldconfig
 
 WORKDIR /workspace
