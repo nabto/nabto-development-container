@@ -114,7 +114,7 @@ RUN git clone --recurse-submodules --depth 1 --branch ${AWS_SDK_CPP_VERSION} htt
 # RUN tar xf ${AWS_SDK_CPP_VERSION}.tar.gz
 # RUN ./aws-sdk-cpp-${AWS_SDK_CPP_VERSION}/prefetch_crt_dependency.sh
 WORKDIR /build/aws-sdk/build
-RUN cmake -GNinja -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_ONLY="lambda;sns" -DBUILD_SHARED_LIBS=ON -DENABLE_UNITY_BUILD=ON -DENABLE_TESTING=0 -DUSE_OPENSSL=ON ../aws-sdk-cpp
+RUN cmake -GNinja -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_ONLY="lambda;sns" -DBUILD_SHARED_LIBS=OFF -DENABLE_UNITY_BUILD=ON -DENABLE_TESTING=0 -DUSE_OPENSSL=ON ../aws-sdk-cpp
 RUN ninja
 RUN ninja install
 
