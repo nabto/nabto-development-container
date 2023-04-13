@@ -1,4 +1,4 @@
-FROM debian:bullseye AS base
+FROM debian:bookworm AS base
 ARG CMAKE_VERSION=3.19.6
 
 RUN apt update && apt install -y git build-essential autoconf libtool pkg-config wget bash-completion vim gdb libgoogle-perftools-dev clang gcc curl ninja-build valgrind python3-pip sudo unzip cmake-format
@@ -64,16 +64,6 @@ WORKDIR /build/build
 RUN cmake .. -GNinja -DBUILD_SHARED_LIBS=0 -DCMAKE_POSITION_INDEPENDENT_CODE=ON ../src
 RUN ninja install
 
-FROM base as protobuf
-
-WORKDIR /build/src
-ARG PROTOBUF_VERSION=21.2
-RUN curl -sSL https://github.com/protocolbuffers/protobuf/archive/v${PROTOBUF_VERSION}.tar.gz | tar -xzf - --strip-components=1
-WORKDIR /build/build
-RUN cmake -GNinja -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -Dprotobuf_BUILD_TESTS=OFF ../src
-RUN ninja install
-RUN ldconfig
-
 FROM base as abseil
 # Abseil Install
 WORKDIR /build/abseil
@@ -85,8 +75,22 @@ RUN cmake --build cmake-out --target install -- -j ${NCPU:-4}
 RUN ldconfig
 
 
+FROM base as protobuf
+COPY --from=abseil /usr/local /usr/local
+RUN ldconfig
+
+WORKDIR /build/src
+ARG PROTOBUF_VERSION=21.12
+RUN curl -sSL https://github.com/protocolbuffers/protobuf/archive/v${PROTOBUF_VERSION}.tar.gz | tar -xzf - --strip-components=1
+WORKDIR /build/build
+RUN cmake -GNinja -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_ABSL_PROVIDER=package ../src
+RUN ninja install
+RUN ldconfig
+
+
+
 FROM base as grpc
-ARG GRPC_VERSION=1.47.0
+ARG GRPC_VERSION=1.54.0
 
 COPY --from=zlib /usr/local /usr/local
 COPY --from=cares /usr/local /usr/local
@@ -97,8 +101,7 @@ COPY --from=abseil /usr/local /usr/local
 RUN ldconfig
 
 WORKDIR /build/src
-#RUN curl -sSL https://github.com/grpc/grpc/archive/refs/tags/v${GRPC_VERSION}.tar.gz | tar -xzf - --strip-components=1
-RUN curl -sSL https://github.com/jrandolf/grpc/archive/refs/heads/openssl-3.tar.gz | tar -xzf - --strip-components=1
+RUN curl -sSL https://github.com/grpc/grpc/archive/refs/tags/v${GRPC_VERSION}.tar.gz | tar -xzf - --strip-components=1
 WORKDIR /build/build
 RUN cmake -GNinja -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DgRPC_ZLIB_PROVIDER=package -DgRPC_SSL_PROVIDER=package -DgRPC_RE2_PROVIDER=package -DgRPC_PROTOBUF_PROVIDER=package -DgRPC_ABSL_PROVIDER=package -DgRPC_CARES_PROVIDER=package  -DgRPC_INSTALL=ON -DgRPC_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo ../src
 RUN ninja
