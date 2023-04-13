@@ -114,6 +114,8 @@ RUN git clone --recurse-submodules --depth 1 --branch ${AWS_SDK_CPP_VERSION} htt
 # RUN tar xf ${AWS_SDK_CPP_VERSION}.tar.gz
 # RUN ./aws-sdk-cpp-${AWS_SDK_CPP_VERSION}/prefetch_crt_dependency.sh
 WORKDIR /build/aws-sdk/build
+RUN sed -i 's/^.*S2N_LIBCRYPTO_SUPPORTS_EVP_RC4.*$/ /' ../aws-sdk-cpp/crt/aws-crt-cpp/crt/s2n/s2n.mk
+RUN sed -i 's/^.*S2N_LIBCRYPTO_SUPPORTS_EVP_RC4.*$/ /' ../aws-sdk-cpp/crt/aws-crt-cpp/crt/s2n/CMakeLists.txt
 RUN cmake -GNinja -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_ONLY="lambda;sns" -DBUILD_SHARED_LIBS=OFF -DENABLE_UNITY_BUILD=ON -DENABLE_TESTING=0 -DUSE_OPENSSL=ON ../aws-sdk-cpp
 RUN ninja
 RUN ninja install
