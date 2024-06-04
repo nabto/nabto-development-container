@@ -3,7 +3,7 @@ name: Create and publish to aws
 on: push
 
 env:
-  REGISTRY: public.ecr.aws/h4w5s5c4
+  REGISTRY: public.ecr.aws/nabto
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
