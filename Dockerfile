@@ -48,7 +48,7 @@ RUN make install
 # RUN ninja install
 
 FROM base as cares
-ARG CARES_VERSION=1_18_1
+ARG CARES_VERSION=1_29_0
 WORKDIR /build/cares
 RUN wget https://github.com/c-ares/c-ares/archive/refs/tags/cares-${CARES_VERSION}.tar.gz
 RUN tar xf cares-${CARES_VERSION}.tar.gz
@@ -56,28 +56,10 @@ WORKDIR /build/cares/build
 RUN cmake .. -GNinja -DBUILD_SHARED_LIBS=OFF -DCARES_STATIC=ON -DCARES_SHARED=OFF -DCARES_STATIC_PIC=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON ../c-ares-cares-${CARES_VERSION}
 RUN ninja install
 
-FROM base as re2
-ARG RE2_VERSION=2022-06-01
-WORKDIR /build/src
-RUN curl -sSL https://github.com/google/re2/archive/refs/tags/${RE2_VERSION}.tar.gz | tar -xzf - --strip-components=1
-WORKDIR /build/build
-RUN cmake .. -GNinja -DBUILD_SHARED_LIBS=0 -DCMAKE_POSITION_INDEPENDENT_CODE=ON ../src
-RUN ninja install
-
-FROM base as protobuf
-
-WORKDIR /build/src
-ARG PROTOBUF_VERSION=21.2
-RUN curl -sSL https://github.com/protocolbuffers/protobuf/archive/v${PROTOBUF_VERSION}.tar.gz | tar -xzf - --strip-components=1
-WORKDIR /build/build
-RUN cmake -GNinja -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -Dprotobuf_BUILD_TESTS=OFF ../src
-RUN ninja install
-RUN ldconfig
-
 FROM base as abseil
 # Abseil Install
 WORKDIR /build/abseil
-RUN curl -sSL https://github.com/abseil/abseil-cpp/archive/20230125.2.tar.gz | tar -xzf - --strip-components=1
+RUN curl -sSL https://github.com/abseil/abseil-cpp/archive/20240116.2.tar.gz | tar -xzf - --strip-components=1
 RUN sed -i 's/^#define ABSL_OPTION_USE_\(.*\) 2/#define ABSL_OPTION_USE_\1 0/' "absl/base/options.h"
 RUN cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=Release  -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=OFF -DCMAKE_CXX_STANDARD=14 -H. -Bcmake-out
 RUN cmake --build cmake-out -- -j ${NCPU:-4}
@@ -85,8 +67,29 @@ RUN cmake --build cmake-out --target install -- -j ${NCPU:-4}
 RUN ldconfig
 
 
+FROM base as re2
+ARG RE2_VERSION=2024-06-01
+WORKDIR /build/src
+RUN curl -sSL https://github.com/google/re2/archive/refs/tags/${RE2_VERSION}.tar.gz | tar -xzf - --strip-components=1
+WORKDIR /build/build
+COPY --from=abseil /usr/local /usr/local
+RUN cmake .. -GNinja -DBUILD_SHARED_LIBS=0 -DCMAKE_POSITION_INDEPENDENT_CODE=ON ../src
+RUN ninja install
+
+
+FROM base as protobuf
+WORKDIR /build/src
+ARG PROTOBUF_VERSION=27.0
+RUN curl -sSL https://github.com/protocolbuffers/protobuf/archive/v${PROTOBUF_VERSION}.tar.gz | tar -xzf - --strip-components=1
+WORKDIR /build/build
+COPY --from=abseil /usr/local /usr/local
+RUN cmake -GNinja -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_ABSL_PROVIDER=package ../src
+RUN ninja install
+RUN ldconfig
+
+
 FROM base as grpc
-ARG GRPC_VERSION=1.47.0
+ARG GRPC_VERSION=1.64.1
 
 COPY --from=zlib /usr/local /usr/local
 COPY --from=cares /usr/local /usr/local
@@ -97,8 +100,8 @@ COPY --from=abseil /usr/local /usr/local
 RUN ldconfig
 
 WORKDIR /build/src
-#RUN curl -sSL https://github.com/grpc/grpc/archive/refs/tags/v${GRPC_VERSION}.tar.gz | tar -xzf - --strip-components=1
-RUN curl -sSL https://github.com/jrandolf/grpc/archive/refs/heads/openssl-3.tar.gz | tar -xzf - --strip-components=1
+RUN curl -sSL https://github.com/grpc/grpc/archive/refs/tags/v${GRPC_VERSION}.tar.gz | tar -xzf - --strip-components=1
+#RUN curl -sSL https://github.com/jrandolf/grpc/archive/refs/heads/openssl-3.tar.gz | tar -xzf - --strip-components=1
 WORKDIR /build/build
 RUN cmake -GNinja -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DgRPC_ZLIB_PROVIDER=package -DgRPC_SSL_PROVIDER=package -DgRPC_RE2_PROVIDER=package -DgRPC_PROTOBUF_PROVIDER=package -DgRPC_ABSL_PROVIDER=package -DgRPC_CARES_PROVIDER=package  -DgRPC_INSTALL=ON -DgRPC_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo ../src
 RUN ninja
