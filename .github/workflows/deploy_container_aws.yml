@@ -4,7 +4,7 @@ on: push
 
 env:
   REGISTRY: public.ecr.aws/h4w5s5c4
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: nabto-development-container
 
 jobs:
   build-and-push-image:
