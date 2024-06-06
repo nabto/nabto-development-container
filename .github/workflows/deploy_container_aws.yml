@@ -20,7 +20,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: eu-west-1
+          aws-region: us-east-1
           role-to-assume: arn:aws:iam::297820887526:role/nabto-development-container-github-ecr-access
 
       - name: Login to Amazon ECR
